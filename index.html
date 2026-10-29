@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Productieplank</title>
+<title>Productiedashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <style>
@@ -59,7 +59,7 @@ dialog input{width:100%;font:inherit;padding:8px;border-radius:8px;border:1px so
 </head>
 <body>
 <header>
-  <div><h1>Productieplank</h1><div id="status"></div></div>
+  <div><h1>Productiedashboard</h1><div id="status"></div></div>
   <div class="actions">
     <button class="primary" id="open-up">Upload bestanden</button>
     <button id="open-admin">Inloggen</button>
@@ -70,24 +70,24 @@ dialog input{width:100%;font:inherit;padding:8px;border-radius:8px;border:1px so
 
 <dialog id="viewer">
   <div id="vbody"></div>
-  <div class="row"><button id="del" hidden>Verwijderen</button><button id="close">Afsluiten</button></div>
+  <div class="row"><button id="del" hidden>Delete</button><button id="close">Close</button></div>
 </dialog>
 
 <dialog id="up" class="sm">
-  <h2 style="margin-top:0">Upload files</h2>
+  <h2 style="margin-top:0">Upload bestanden/h2>
   <p>Upload hier je bestanden maximaal 50 MB (Audio: mp3, wav, ogg, m4a, aac, flac Video: mp4, webm, mov Text: txt, md, csv, json, docx, and pdf)</p>
-  <label for="up-name">Je naam</label><input id="up-name" autocomplete="name">
-  <label for="up-files">Bestanden</label><input id="up-files" type="file" multiple accept="audio/*,video/*,.txt,.md,.csv,.json,.docx,.pdf">
+  <label for="up-name">Your name</label><input id="up-name" autocomplete="name">
+  <label for="up-files">Files</label><input id="up-files" type="file" multiple accept="audio/*,video/*,.txt,.md,.csv,.json,.docx,.pdf">
   <p class="msg" id="up-msg" role="status"></p>
-  <div class="row"><button id="up-close">Close</button><button class="primary" id="up-go">Uploaden</button></div>
+  <div class="row"><button id="up-close">Close</button><button class="primary" id="up-go">Send for approval</button></div>
 </dialog>
 
 <dialog id="adm" class="sm">
-  <h2 style="margin-top:0">Student login</h2>
+  <h2 style="margin-top:0">Admin login</h2>
   <label for="a-mail">Email</label><input id="a-mail" type="email" autocomplete="username">
   <label for="a-pass">Wachtwoord</label><input id="a-pass" type="password" autocomplete="current-password">
   <p class="msg" id="a-msg" role="status"></p>
-  <div class="row"><button id="a-close">Terug</button><button class="primary" id="a-go">Inloggen</button></div>
+  <div class="row"><button id="a-close">Afsluiten</button><button class="primary" id="a-go">Inloggen</button></div>
 </dialog>
 
 <script>
@@ -120,7 +120,7 @@ async function load(){
   if(error){ setStatus("Could not load files: "+error.message); return; }
   items = data.map(f=>({...f, url: sb.storage.from("media").getPublicUrl(f.path).data.publicUrl})).sort(natural);
   const pending = items.filter(i=>!i.approved).length;
-  setStatus(isAdmin ? `Student mode · ${pending} waiting for approval` : "");
+  setStatus(isAdmin ? `Student mode · ${pending} wachten op bevestiging` : "");
   render(); renderReview();
 }
 if(configured){
@@ -132,29 +132,29 @@ $("#open-up").onclick = () => { $("#up-msg").textContent=""; $("#up").showModal(
 $("#up-close").onclick = () => $("#up").close();
 const upMsg = t => $("#up-msg").textContent = t;
 $("#up-go").onclick = async () => {
-  if(!configured) return upMsg("Deze site is nog niet verbonden aan de database opslag.");
-  const files=[...$("#up-files").files], who=$("#up-name").value.trim(), code=$("#up-code").value.trim();
-  if(!who || !files.length) return upMsg("Voeg je naam en minstens 1 bestand toe.");
+  if(!configured) return upMsg("De site is nog niet verbonden aan de database.");
+  const files=[...$("#up-files").files], who=$("#up-name").value.trim();
+  if(!who || !files.length) return upMsg("Add your name and at least one file.");
   $("#up-go").disabled = true; let ok = 0;
   for(const f of files){
     const kind = kindOf(f.name);
     if(!kind){ upMsg(`${f.name}: file type not supported.`); continue; }
-    if(f.size > 50*1024*1024){ upMsg(`${f.name} is over 50 MB. Compress it or send a link to your fellow students.`); continue; }
+    if(f.size > 50*1024*1024){ upMsg(`${f.name} is groter dan 50 MB`); continue; }
     upMsg(`Uploading ${f.name}…`);
     const path = crypto.randomUUID()+"."+ext(f.name);
-    const r1 = await sb.rpc("submit_file",{code,p_name:f.name,p_kind:kind,p_path:path,p_uploader:who});
-    if(r1.error){ upMsg(r1.error.message.includes("class code")?"That class code is wrong.":"Could not register file: "+r1.error.message); break; }
+    const r1 = await sb.rpc("submit_file",{p_name:f.name,p_kind:kind,p_path:path,p_uploader:who});
+    if(r1.error){ upMsg("Could not register file: "+r1.error.message); break; }
     const r2 = await sb.storage.from("media").upload(path,f,{contentType:f.type||undefined});
-    if(r2.error){ upMsg(`Upload failed for ${f.name}: ${r2.error.message}`); break; }
+    if(r2.error){ upMsg(`Upload mislukt op bestand: ${f.name}: ${r2.error.message}`); break; }
     ok++;
   }
   $("#up-go").disabled = false;
-  if(ok){ upMsg(`Done. ${ok} file${ok>1?"s":""} sent for approval.`); $("#up-files").value=""; load(); }
+  if(ok){ upMsg(`Gelukt! ${ok} file${ok>1?"s":""} `); $("#up-files").value=""; load(); }
 };
 
-/* ---------- Student login ---------- */
+/* ---------- teacher login ---------- */
 $("#open-admin").onclick = async () => {
-  if(isAdmin){ await sb.auth.signOut(); isAdmin=false; $("#open-admin").textContent="Student login"; load(); return; }
+  if(isAdmin){ await sb.auth.signOut(); isAdmin=false; $("#open-admin").textContent="Teacher login"; load(); return; }
   if(!configured) return setStatus("Add your Supabase details first.");
   $("#a-msg").textContent=""; $("#adm").showModal();
 };
