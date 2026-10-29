@@ -77,7 +77,6 @@ dialog input{width:100%;font:inherit;padding:8px;border-radius:8px;border:1px so
   <h2 style="margin-top:0">Upload files</h2>
   <p>Upload hier je bestanden maximaal 50 MB (Audio: mp3, wav, ogg, m4a, aac, flac Video: mp4, webm, mov Text: txt, md, csv, json, docx, and pdf)</p>
   <label for="up-name">Je naam</label><input id="up-name" autocomplete="name">
-  <label for="up-code">Class code</label><input id="up-code" type="password" autocomplete="off">
   <label for="up-files">Bestanden</label><input id="up-files" type="file" multiple accept="audio/*,video/*,.txt,.md,.csv,.json,.docx,.pdf">
   <p class="msg" id="up-msg" role="status"></p>
   <div class="row"><button id="up-close">Close</button><button class="primary" id="up-go">Uploaden</button></div>
@@ -121,11 +120,11 @@ async function load(){
   if(error){ setStatus("Could not load files: "+error.message); return; }
   items = data.map(f=>({...f, url: sb.storage.from("media").getPublicUrl(f.path).data.publicUrl})).sort(natural);
   const pending = items.filter(i=>!i.approved).length;
-  setStatus(isAdmin ? `Teacher mode · ${pending} waiting for approval` : "");
+  setStatus(isAdmin ? `Student mode · ${pending} waiting for approval` : "");
   render(); renderReview();
 }
 if(configured){
-  sb.auth.getSession().then(({data})=>{ isAdmin=!!data.session; $("#open-admin").textContent = isAdmin?"Log out":"Teacher login"; load(); });
+  sb.auth.getSession().then(({data})=>{ isAdmin=!!data.session; $("#open-admin").textContent = isAdmin?"Log out":"Student login"; load(); });
 } else load();
 
 /* ---------- student upload ---------- */
@@ -133,14 +132,14 @@ $("#open-up").onclick = () => { $("#up-msg").textContent=""; $("#up").showModal(
 $("#up-close").onclick = () => $("#up").close();
 const upMsg = t => $("#up-msg").textContent = t;
 $("#up-go").onclick = async () => {
-  if(!configured) return upMsg("The site isn’t connected to storage yet.");
+  if(!configured) return upMsg("Deze site is nog niet verbonden aan de database opslag.");
   const files=[...$("#up-files").files], who=$("#up-name").value.trim(), code=$("#up-code").value.trim();
-  if(!who || !code || !files.length) return upMsg("Add your name, the class code and at least one file.");
+  if(!who || !files.length) return upMsg("Voeg je naam en minstens 1 bestand toe.");
   $("#up-go").disabled = true; let ok = 0;
   for(const f of files){
     const kind = kindOf(f.name);
     if(!kind){ upMsg(`${f.name}: file type not supported.`); continue; }
-    if(f.size > 50*1024*1024){ upMsg(`${f.name} is over 50 MB. Compress it or send a link to your teacher.`); continue; }
+    if(f.size > 50*1024*1024){ upMsg(`${f.name} is over 50 MB. Compress it or send a link to your fellow students.`); continue; }
     upMsg(`Uploading ${f.name}…`);
     const path = crypto.randomUUID()+"."+ext(f.name);
     const r1 = await sb.rpc("submit_file",{code,p_name:f.name,p_kind:kind,p_path:path,p_uploader:who});
@@ -153,16 +152,16 @@ $("#up-go").onclick = async () => {
   if(ok){ upMsg(`Done. ${ok} file${ok>1?"s":""} sent for approval.`); $("#up-files").value=""; load(); }
 };
 
-/* ---------- teacher login ---------- */
+/* ---------- Student login ---------- */
 $("#open-admin").onclick = async () => {
-  if(isAdmin){ await sb.auth.signOut(); isAdmin=false; $("#open-admin").textContent="Teacher login"; load(); return; }
+  if(isAdmin){ await sb.auth.signOut(); isAdmin=false; $("#open-admin").textContent="Student login"; load(); return; }
   if(!configured) return setStatus("Add your Supabase details first.");
   $("#a-msg").textContent=""; $("#adm").showModal();
 };
 $("#a-close").onclick = () => $("#adm").close();
 $("#a-go").onclick = async () => {
   const { error } = await sb.auth.signInWithPassword({email:$("#a-mail").value.trim(),password:$("#a-pass").value});
-  if(error) return $("#a-msg").textContent = "Login failed: "+error.message;
+  if(error) return $("#a-msg").textContent = "Inloggen mislukt: "+error.message;
   isAdmin = true; $("#a-pass").value=""; $("#adm").close(); $("#open-admin").textContent="Log out"; load();
 };
 
@@ -205,7 +204,7 @@ function render(){
     sec.innerHTML = `<h2>${LABEL[k]} <span>${list.length}</span></h2><div class="stage"></div><div class="ctl"><button aria-label="Previous">‹</button><div class="dots"></div><button aria-label="Next">›</button></div><div class="bar"><b></b></div>`;
     $("#main").append(sec);
     const stage = sec.querySelector(".stage");
-    if(!list.length){ stage.innerHTML = `<div class="empty">No ${LABEL[k].toLowerCase()} files yet.</div>`; continue; }
+    if(!list.length){ stage.innerHTML = `<div class="empty">Geen ${LABEL[k].toLowerCase()} bestanden gevonden.</div>`; continue; }
     const slides = list.map(it=>{
       const b = document.createElement("button"); b.className="slide"; b.setAttribute("aria-label","Open "+it.name);
       if(k==="video") b.innerHTML = `<video muted preload="metadata" src="${it.url}#t=0.5"></video><div class="play"></div><div class="t"></div>`;
