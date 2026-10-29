@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Newsroom Shelf</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<style>
+:root{--bg:#eaeff1;--card:#fff;--ink:#14252b;--mute:#5b6e75;--line:#cdd8dc;--audio:#0f7b8a;--video:#c2386b;--text:#a8650f;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#10191d;--card:#18252b;--ink:#e6eef0;--mute:#8da2a9;--line:#2b3d45;--audio:#3cc0d1;--video:#f06a9a;--text:#e9a549;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Avenir Next","Segoe UI",system-ui,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:20px clamp(16px,4vw,48px)}
+h1{margin:0;font-size:1.6rem;letter-spacing:-.02em}
+button,.btn{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:8px}
+button:hover{border-color:var(--ink)}
+button:focus-visible,.slide:focus-visible,input:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+#status{color:var(--mute);font-size:.9rem}
+main{display:grid;gap:20px;padding:0 clamp(16px,4vw,48px) 48px;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;border-top:6px solid var(--c)}
+section[data-k=audio]{--c:var(--audio)}section[data-k=video]{--c:var(--video)}section[data-k=text]{--c:var(--text)}
+section h2{margin:0 0 12px;font-size:1.1rem;display:flex;justify-content:space-between}
+section h2 span{color:var(--mute);font-weight:400}
+.stage{position:relative;aspect-ratio:16/10;border-radius:10px;overflow:hidden;background:var(--bg)}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;justify-content:flex-end;gap:6px;padding:14px;cursor:pointer;width:100%;border:0;border-radius:0;text-align:left;background:transparent;color:var(--ink)}
+.slide.on{display:flex;animation:f .35s}
+@keyframes f{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){.slide.on{animation:none}}
+.slide video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.slide .t{position:relative;font-weight:600;word-break:break-word;background:var(--card);padding:4px 8px;border-radius:6px;align-self:flex-start;max-width:100%}
+.slide .t small{display:block;font-weight:400;color:var(--mute)}
+.slide .ex{font-size:.9rem;color:var(--mute);overflow:hidden;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;white-space:pre-wrap;margin-bottom:4px}
+.play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:var(--c);display:grid;place-items:center}
+.play:after{content:"";border-left:20px solid #fff;border-top:12px solid transparent;border-bottom:12px solid transparent;margin-left:5px}
+.empty{display:grid;place-items:center;height:100%;color:var(--mute);text-align:center;padding:16px}
+.ctl{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:8px}
+.dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}.dots i.on{background:var(--c)}
+.bar{height:3px;background:var(--line);margin-top:10px;border-radius:2px;overflow:hidden}
+.bar b{display:block;height:100%;width:0;background:var(--c)}
+#review{grid-column:1/-1;border-top-color:var(--ink)}
+.rv{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.rv div:first-child{min-width:0;word-break:break-word}.rv small{color:var(--mute)}
+dialog{border:0;border-radius:14px;padding:18px;width:min(900px,94vw);background:var(--card);color:var(--ink)}
+dialog.sm{width:min(460px,94vw)}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+dialog video{width:100%;max-height:70vh;background:#000;border-radius:8px}
+dialog audio{width:100%}
+dialog pre{white-space:pre-wrap;max-height:65vh;overflow:auto;font:inherit}
+dialog label{display:block;margin:10px 0 2px;font-size:.9rem;color:var(--mute)}
+dialog input{width:100%;font:inherit;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.row{display:flex;gap:8px;justify-content:space-between;margin-top:14px;flex-wrap:wrap}
+.msg{min-height:1.5em;margin:10px 0 0;color:var(--mute)}
+#drop{outline:3px dashed var(--ink);outline-offset:-10px}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Newsroom Shelf</h1><div id="status"></div></div>
+  <div class="actions">
+    <button class="primary" id="open-up">Upload files</button>
+    <button id="open-admin">Teacher login</button>
+  </div>
+</header>
+
+<main id="main"></main>
+
+<dialog id="viewer">
+  <div id="vbody"></div>
+  <div class="row"><button id="del" hidden>Delete</button><button id="close">Close</button></div>
+</dialog>
+
+<dialog id="up" class="sm">
+  <h2 style="margin-top:0">Upload files</h2>
+  <p>Files appear on the site after your teacher approves them. Audio, video and text only, up to 50 MB each.</p>
+  <label for="up-name">Your name</label><input id="up-name" autocomplete="name">
+  <label for="up-code">Class code</label><input id="up-code" type="password" autocomplete="off">
+  <label for="up-files">Files</label><input id="up-files" type="file" multiple accept="audio/*,video/*,.txt,.md,.csv,.json,.docx,.pdf">
+  <p class="msg" id="up-msg" role="status"></p>
+  <div class="row"><button id="up-close">Close</button><button class="primary" id="up-go">Send for approval</button></div>
+</dialog>
+
+<dialog id="adm" class="sm">
+  <h2 style="margin-top:0">Teacher login</h2>
+  <label for="a-mail">Email</label><input id="a-mail" type="email" autocomplete="username">
+  <label for="a-pass">Password</label><input id="a-pass" type="password" autocomplete="current-password">
+  <p class="msg" id="a-msg" role="status"></p>
+  <div class="row"><button id="a-close">Cancel</button><button class="primary" id="a-go">Log in</button></div>
+</dialog>
+
+<script>
+/* ===== 1. Paste your two Supabase values here (Project Settings → API) ===== */
+const SUPABASE_URL = "https://rtgwpfdjcvknrqlzbfni.supabase.co";
+const SUPABASE_KEY = "sb_publishable_j0Y6VlpoZRlmpCupVtudTw_yzeJhJru";
+/* ========================================================================== */
+
+const INTERVAL = 15000;
+const EXT = {
+  audio:["mp3","wav","ogg","m4a","aac","flac","oga"],
+  video:["mp4","webm","mov","m4v","ogv"],
+  text:["txt","md","csv","json","docx","pdf","rtf"]
+};
+const LABEL = {audio:"Audio", video:"Video", text:"Text"};
+const $ = s => document.querySelector(s);
+const ext = n => n.split(".").pop().toLowerCase();
+const kindOf = n => Object.keys(EXT).find(k=>EXT[k].includes(ext(n)));
+const setStatus = t => $("#status").textContent = t;
+const natural = (a,b) => a.name.localeCompare(b.name,undefined,{numeric:true});
+
+const configured = !SUPABASE_URL.includes("YOUR-PROJECT");
+const sb = configured ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+let items = [], isAdmin = false, current;
+
+/* ---------- load ---------- */
+async function load(){
+  if(!configured){ setStatus("Setup needed: add your Supabase URL and key at the top of index.html."); render(); return; }
+  const { data, error } = await sb.from("files").select("*");
+  if(error){ setStatus("Could not load files: "+error.message); return; }
+  items = data.map(f=>({...f, url: sb.storage.from("media").getPublicUrl(f.path).data.publicUrl})).sort(natural);
+  const pending = items.filter(i=>!i.approved).length;
+  setStatus(isAdmin ? `Teacher mode · ${pending} waiting for approval` : "");
+  render(); renderReview();
+}
+if(configured){
+  sb.auth.getSession().then(({data})=>{ isAdmin=!!data.session; $("#open-admin").textContent = isAdmin?"Log out":"Teacher login"; load(); });
+} else load();
+
+/* ---------- student upload ---------- */
+$("#open-up").onclick = () => { $("#up-msg").textContent=""; $("#up").showModal(); };
+$("#up-close").onclick = () => $("#up").close();
+const upMsg = t => $("#up-msg").textContent = t;
+$("#up-go").onclick = async () => {
+  if(!configured) return upMsg("The site isn’t connected to storage yet.");
+  const files=[...$("#up-files").files], who=$("#up-name").value.trim(), code=$("#up-code").value.trim();
+  if(!who || !code || !files.length) return upMsg("Add your name, the class code and at least one file.");
+  $("#up-go").disabled = true; let ok = 0;
+  for(const f of files){
+    const kind = kindOf(f.name);
+    if(!kind){ upMsg(`${f.name}: file type not supported.`); continue; }
+    if(f.size > 50*1024*1024){ upMsg(`${f.name} is over 50 MB. Compress it or send a link to your teacher.`); continue; }
+    upMsg(`Uploading ${f.name}…`);
+    const path = crypto.randomUUID()+"."+ext(f.name);
+    const r1 = await sb.rpc("submit_file",{code,p_name:f.name,p_kind:kind,p_path:path,p_uploader:who});
+    if(r1.error){ upMsg(r1.error.message.includes("class code")?"That class code is wrong.":"Could not register file: "+r1.error.message); break; }
+    const r2 = await sb.storage.from("media").upload(path,f,{contentType:f.type||undefined});
+    if(r2.error){ upMsg(`Upload failed for ${f.name}: ${r2.error.message}`); break; }
+    ok++;
+  }
+  $("#up-go").disabled = false;
+  if(ok){ upMsg(`Done. ${ok} file${ok>1?"s":""} sent for approval.`); $("#up-files").value=""; load(); }
+};
+
+/* ---------- teacher login ---------- */
+$("#open-admin").onclick = async () => {
+  if(isAdmin){ await sb.auth.signOut(); isAdmin=false; $("#open-admin").textContent="Teacher login"; load(); return; }
+  if(!configured) return setStatus("Add your Supabase details first.");
+  $("#a-msg").textContent=""; $("#adm").showModal();
+};
+$("#a-close").onclick = () => $("#adm").close();
+$("#a-go").onclick = async () => {
+  const { error } = await sb.auth.signInWithPassword({email:$("#a-mail").value.trim(),password:$("#a-pass").value});
+  if(error) return $("#a-msg").textContent = "Login failed: "+error.message;
+  isAdmin = true; $("#a-pass").value=""; $("#adm").close(); $("#open-admin").textContent="Log out"; load();
+};
+
+/* ---------- approval panel ---------- */
+function renderReview(){
+  document.querySelector("#review")?.remove();
+  const pend = items.filter(i=>!i.approved);
+  if(!isAdmin || !pend.length) return;
+  const s = document.createElement("section"); s.id="review";
+  s.innerHTML = `<h2>Waiting for approval <span>${pend.length}</span></h2>`;
+  pend.forEach(it=>{
+    const r = document.createElement("div"); r.className="rv";
+    r.innerHTML = `<div><b></b><br><small></small></div><div class="actions"><button>Preview</button><button class="primary">Approve</button><button>Reject</button></div>`;
+    r.querySelector("b").textContent = it.name;
+    r.querySelector("small").textContent = `${LABEL[it.kind]} · by ${it.uploader||"unknown"}`;
+    const [pv,ap,rj] = r.querySelectorAll("button");
+    pv.onclick = () => openItem(it);
+    ap.onclick = async () => { const {error}=await sb.from("files").update({approved:true}).eq("id",it.id); error?setStatus(error.message):load(); };
+    rj.onclick = () => removeItem(it);
+    s.append(r);
+  });
+  $("#main").prepend(s);
+}
+async function removeItem(it){
+  if(!confirm(`Remove ${it.name}?`)) return;
+  await sb.storage.from("media").remove([it.path]);
+  const {error} = await sb.from("files").delete().eq("id",it.id);
+  error ? setStatus("Delete failed: "+error.message) : load();
+}
+
+/* ---------- slideshows ---------- */
+const shows = {};
+let paused = 0;
+function render(){
+  Object.values(shows).forEach(s=>clearInterval(s.timer));
+  [...$("#main").querySelectorAll("section[data-k]")].forEach(e=>e.remove());
+  for(const k of ["audio","video","text"]){
+    const list = items.filter(i=>i.kind===k && i.approved);
+    const sec = document.createElement("section"); sec.dataset.k = k;
+    sec.innerHTML = `<h2>${LABEL[k]} <span>${list.length}</span></h2><div class="stage"></div><div class="ctl"><button aria-label="Previous">‹</button><div class="dots"></div><button aria-label="Next">›</button></div><div class="bar"><b></b></div>`;
+    $("#main").append(sec);
+    const stage = sec.querySelector(".stage");
+    if(!list.length){ stage.innerHTML = `<div class="empty">No ${LABEL[k].toLowerCase()} files yet.</div>`; continue; }
+    const slides = list.map(it=>{
+      const b = document.createElement("button"); b.className="slide"; b.setAttribute("aria-label","Open "+it.name);
+      if(k==="video") b.innerHTML = `<video muted preload="metadata" src="${it.url}#t=0.5"></video><div class="play"></div><div class="t"></div>`;
+      if(k==="audio") b.innerHTML = `<div class="play"></div><div class="t"></div>`;
+      if(k==="text"){ b.innerHTML = `<div class="ex">Loading preview…</div><div class="t"></div>`; textOf(it).then(t=>b.querySelector(".ex").textContent = t ? t.slice(0,500) : "Open to view this file."); }
+      const t = b.querySelector(".t"); t.textContent = it.name;
+      if(it.uploader){ const sm=document.createElement("small"); sm.textContent="by "+it.uploader; t.append(sm); }
+      b.onclick = () => openItem(it);
+      stage.append(b); return b;
+    });
+    const dots = sec.querySelector(".dots"); dots.innerHTML = list.map(()=>"<i></i>").join("");
+    const bar = sec.querySelector(".bar b");
+    const S = shows[k] = {i:0, t0:0};
+    const go = n => {
+      S.i = (n+list.length)%list.length;
+      slides.forEach((s,j)=>s.classList.toggle("on",j===S.i));
+      [...dots.children].forEach((d,j)=>d.classList.toggle("on",j===S.i));
+      S.t0 = performance.now();
+    };
+    const [prev,next] = sec.querySelectorAll(".ctl button");
+    prev.onclick = () => go(S.i-1); next.onclick = () => go(S.i+1);
+    go(0);
+    S.timer = setInterval(()=>{
+      if(paused||document.hidden){ S.t0 = performance.now(); bar.style.width="0"; return; }
+      const el = performance.now()-S.t0; bar.style.width = Math.min(100,el/INTERVAL*100)+"%";
+      if(el>=INTERVAL) go(S.i+1);
+    },100);
+  }
+}
+
+/* ---------- text reading ---------- */
+const cache = new Map();
+async function textOf(it){
+  if(cache.has(it.url)) return cache.get(it.url);
+  let out = "";
+  try{
+    const e = ext(it.name), buf = await (await fetch(it.url)).arrayBuffer();
+    if(e==="docx" && window.mammoth) out = (await mammoth.extractRawText({arrayBuffer:buf})).value;
+    else if(["txt","md","csv","json","rtf"].includes(e)) out = new TextDecoder().decode(buf);
+  }catch(_){}
+  cache.set(it.url,out); return out;
+}
+
+/* ---------- viewer ---------- */
+function openItem(it){
+  current = it; paused++;
+  const box = $("#vbody"); box.innerHTML = "";
+  const h = document.createElement("h2"); h.style.marginTop=0;
+  h.textContent = it.name + (it.uploader ? " · by "+it.uploader : ""); box.append(h);
+  if(it.kind==="video"){ const v=document.createElement("video"); v.controls=true; v.autoplay=true; v.src=it.url; box.append(v); }
+  else if(it.kind==="audio"){ const a=document.createElement("audio"); a.controls=true; a.autoplay=true; a.src=it.url; box.append(a); }
+  else if(ext(it.name)==="pdf"){ const f=document.createElement("iframe"); f.src=it.url; f.style.cssText="width:100%;height:65vh;border:0"; box.append(f); }
+  else { const p=document.createElement("pre"); p.textContent="Loading…"; box.append(p); textOf(it).then(t=>p.textContent=t||"This file can’t be previewed."); }
+  $("#del").hidden = !isAdmin;
+  $("#viewer").showModal();
+}
+$("#viewer").addEventListener("close",()=>{ $("#vbody").innerHTML=""; paused=Math.max(0,paused-1); });
+$("#close").onclick = () => $("#viewer").close();
+$("#del").onclick = async () => { const it=current; $("#viewer").close(); await removeItem(it); };
+
+/* ---------- drag & drop opens the upload form ---------- */
+window.addEventListener("dragover",e=>{e.preventDefault();document.body.id="drop"});
+window.addEventListener("dragleave",e=>{ if(!e.relatedTarget) document.body.id=""; });
+window.addEventListener("drop",e=>{
+  e.preventDefault(); document.body.id="";
+  if(e.dataTransfer.files.length){ $("#up-files").files = e.dataTransfer.files; $("#up-msg").textContent=""; $("#up").showModal(); }
+});
+</script>
+</body>
+</html>
