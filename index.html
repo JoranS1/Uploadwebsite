@@ -7,88 +7,100 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <style>
-:root{--bg:#eaeff1;--card:#fff;--ink:#14252b;--mute:#5b6e75;--line:#cdd8dc;--audio:#0f7b8a;--video:#c2386b;--text:#a8650f;color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--bg:#10191d;--card:#18252b;--ink:#e6eef0;--mute:#8da2a9;--line:#2b3d45;--audio:#3cc0d1;--video:#f06a9a;--text:#e9a549;color-scheme:dark}}
+:root{--bg:#fff;--bg2:#f2f2f0;--ink:#141414;--mute:#64645f;--line:#d9d9d4;--red:#d3202f;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#121212;--bg2:#1c1c1b;--ink:#f1f1ee;--mute:#9d9d96;--line:#33332f;--red:#ff5a66;color-scheme:dark}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Avenir Next","Segoe UI",system-ui,sans-serif}
-header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:20px clamp(16px,4vw,48px)}
-h1{margin:0;font-size:1.6rem;letter-spacing:-.02em}
-button,.btn{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:8px}
-button:hover{border-color:var(--ink)}
-button:focus-visible,.slide:focus-visible,input:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
-.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.actions{display:flex;gap:8px;flex-wrap:wrap}
-#status{color:var(--mute);font-size:.9rem}
-main{display:grid;gap:20px;padding:0 clamp(16px,4vw,48px) 48px;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
-section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;border-top:6px solid var(--c)}
-section[data-k=audio]{--c:var(--audio)}section[data-k=video]{--c:var(--video)}section[data-k=text]{--c:var(--text)}
-section h2{margin:0 0 12px;font-size:1.1rem;display:flex;justify-content:space-between}
-section h2 span{color:var(--mute);font-weight:400}
-.stage{position:relative;aspect-ratio:16/10;border-radius:10px;overflow:hidden;background:var(--bg)}
-.slide{position:absolute;inset:0;display:none;flex-direction:column;justify-content:flex-end;gap:6px;padding:14px;cursor:pointer;width:100%;border:0;border-radius:0;text-align:left;background:transparent;color:var(--ink)}
-.slide.on{display:flex;animation:f .35s}
-@keyframes f{from{opacity:0}}
-@media (prefers-reduced-motion:reduce){.slide.on{animation:none}}
-.slide video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.slide .t{position:relative;font-weight:600;word-break:break-word;background:var(--card);padding:4px 8px;border-radius:6px;align-self:flex-start;max-width:100%}
-.slide .t small{display:block;font-weight:400;color:var(--mute)}
-.slide .ex{font-size:.9rem;color:var(--mute);overflow:hidden;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;white-space:pre-wrap;margin-bottom:4px}
-.play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:var(--c);display:grid;place-items:center}
-.play:after{content:"";border-left:20px solid #fff;border-top:12px solid transparent;border-bottom:12px solid transparent;margin-left:5px}
-.empty{display:grid;place-items:center;height:100%;color:var(--mute);text-align:center;padding:16px}
-.ctl{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:8px}
-.dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
-.dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}.dots i.on{background:var(--c)}
-.bar{height:3px;background:var(--line);margin-top:10px;border-radius:2px;overflow:hidden}
-.bar b{display:block;height:100%;width:0;background:var(--c)}
-#review{grid-column:1/-1;border-top-color:var(--ink)}
-.rv{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line);flex-wrap:wrap}
-.rv div:first-child{min-width:0;word-break:break-word}.rv small{color:var(--mute)}
-dialog{border:0;border-radius:14px;padding:18px;width:min(900px,94vw);background:var(--card);color:var(--ink)}
-dialog.sm{width:min(460px,94vw)}
-dialog::backdrop{background:rgba(0,0,0,.6)}
-dialog video{width:100%;max-height:70vh;background:#000;border-radius:8px}
-dialog audio{width:100%}
-dialog pre{white-space:pre-wrap;max-height:65vh;overflow:auto;font:inherit}
-dialog label{display:block;margin:10px 0 2px;font-size:.9rem;color:var(--mute)}
-dialog input{width:100%;font:inherit;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Helvetica Neue",Arial,sans-serif}
+a{color:inherit}
+.serif,h1,h2,.card b{font-family:Georgia,"Times New Roman",serif}
+.wrap{max-width:1100px;margin:0 auto;padding:0 clamp(14px,3vw,28px)}
+.mast{border-bottom:3px solid var(--ink);margin-bottom:24px}
+.mast .wrap{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding-top:14px;padding-bottom:14px;gap:8px}
+.logo{font:700 clamp(1.6rem,5vw,2.8rem)/1 Georgia,serif;text-decoration:none;letter-spacing:-.02em}
+.logo i{color:var(--red);font-style:normal}
+.right{justify-self:end}
+button,select,.btn{font:inherit;cursor:pointer;border:1px solid var(--ink);background:var(--bg);color:var(--ink);padding:7px 14px;border-radius:0}
+button:hover:not(:disabled){background:var(--ink);color:var(--bg)}button:disabled{opacity:.4;cursor:default}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.red{background:var(--red);border-color:var(--red);color:#fff}
+.red:hover:not(:disabled){background:var(--ink);border-color:var(--ink)}
+details{position:relative}summary{list-style:none;cursor:pointer;border:1px solid var(--ink);padding:7px 14px;display:inline-block;font-weight:600}
+summary::-webkit-details-marker{display:none}
+details nav{position:absolute;z-index:5;top:100%;left:0;margin-top:4px;min-width:190px;background:var(--bg);border:1px solid var(--ink);display:flex;flex-direction:column}
+details nav a,details nav button{padding:10px 14px;text-decoration:none;border:0;border-bottom:1px solid var(--line);text-align:left}
+details nav a:hover,details nav button:hover{background:var(--ink)!important;color:var(--bg)}
+.kop{display:flex;justify-content:space-between;align-items:baseline;border-top:3px solid var(--ink);margin:0 0 14px;padding-top:6px;font-size:1.3rem}
+.kop a{font:600 .85rem Arial,sans-serif;color:var(--red)}
+.grid2{display:grid;gap:28px;grid-template-columns:minmax(0,2fr) minmax(0,1fr);margin-bottom:32px}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}.mast .wrap{grid-template-columns:auto 1fr auto}}
+.cards{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin-bottom:32px}
+.card{display:block;text-decoration:none;border-top:1px solid var(--line);padding-top:8px}
+.card:hover b{text-decoration:underline}
+.card .k,.kick{color:var(--red);font:700 .75rem Arial,sans-serif;text-transform:uppercase;letter-spacing:.06em}
+.card b{display:block;font-size:1.15rem;line-height:1.25}
+.card small,.muted{color:var(--mute)}
+.thumb{width:100%;aspect-ratio:16/9;object-fit:cover;background:var(--bg2);display:block;margin-bottom:6px}
+.stage{position:relative;aspect-ratio:16/9;background:#000;overflow:hidden}
+.slide{position:absolute;inset:0;display:none;color:#fff;text-decoration:none}
+.slide.on{display:block}
+.slide video{width:100%;height:100%;object-fit:cover}
+.slide .t{position:absolute;left:0;right:0;bottom:0;padding:40px 16px 14px;background:linear-gradient(transparent,rgba(0,0,0,.85));font:700 clamp(1.1rem,3vw,1.7rem)/1.2 Georgia,serif}
+.slide .t small{display:block;font:400 .85rem Arial,sans-serif;color:#ddd;margin-top:2px}
+.play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;border-radius:50%;background:var(--red)}
+.play:after{content:"";position:absolute;left:24px;top:18px;border-left:20px solid #fff;border-top:12px solid transparent;border-bottom:12px solid transparent}
+.empty{color:var(--mute);padding:30px 0}
+.ctl{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:8px}
+.dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}.dots i{width:9px;height:9px;background:var(--line)}.dots i.on{background:var(--red)}
+.bar{height:3px;background:var(--line);margin-top:10px}.bar b{display:block;height:100%;width:0;background:var(--red)}
+.paper canvas{width:100%;border:1px solid var(--line);display:block;margin-bottom:8px}
+.art{max-width:820px;margin:0 auto 40px}
+.art h1{font-size:clamp(1.8rem,5vw,2.8rem);line-height:1.1;margin:6px 0}
+.art video,.art audio{width:100%;display:block;margin:16px 0}.art video{background:#000;max-height:75vh}
+.art p{white-space:pre-wrap;font-size:1.05rem}
+.h1{font-size:2rem;margin:0 0 12px}
+.kbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.spread{display:flex;gap:8px;justify-content:center;align-items:flex-start;background:var(--bg2);padding:12px;min-height:200px}
+.spread canvas{border:1px solid var(--line);box-shadow:0 2px 8px rgba(0,0,0,.2);max-width:100%}
+.rv{display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--line)}
 .row{display:flex;gap:8px;justify-content:space-between;margin-top:14px;flex-wrap:wrap}
-.msg{min-height:1.5em;margin:10px 0 0;color:var(--mute)}
-#drop{outline:3px dashed var(--ink);outline-offset:-10px}
+dialog{border:2px solid var(--ink);padding:18px;width:min(480px,94vw);background:var(--bg);color:var(--ink)}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+dialog label{display:block;margin:10px 0 2px;font-size:.9rem;color:var(--mute)}
+dialog input,dialog textarea{width:100%;font:inherit;padding:8px;border:1px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:0}
+.msg{min-height:1.5em;color:var(--mute)}
+footer{border-top:1px solid var(--line);margin-top:40px;padding:20px 0;color:var(--mute);font-size:.85rem}
 </style>
+
 </head>
 <body>
-<header>
-  <div><h1>Productiedashboard</h1><div id="status"></div></div>
-  <div class="actions">
-    <button class="primary" id="open-up">Upload bestanden</button>
-    <button id="open-admin">Inloggen</button>
-  </div>
-</header>
+<header class="mast"><div class="wrap">
+  <details id="menu"><summary>☰ Menu</summary><nav id="nav"></nav></details>
+  <a class="logo" href="#/">The <i>Newsroom</i></a>
+  <div class="right"><button class="red" id="open-up">Upload bestanden</button></div>
+</div></header>
+<div class="wrap"><div id="status" class="muted" role="status"></div><main id="app"></main><footer>&copy; Verwonderaars · Journalistiek 2026</footer></div>
 
-<main id="main"></main>
-
-<dialog id="viewer">
-  <div id="vbody"></div>
-  <div class="row"><button id="del" hidden>Delete</button><button id="close">Afsluiten</button></div>
+<dialog id="up">
+  <h2 class="serif" style="margin-top:0">Productie uploaden</h2>
+  <p class="muted">Maximaal 50 MB. Audio (mp3…), video (mp4…) of de krant (PDF).</p>
+  <label for="u-name">Je naam</label><input id="u-name" autocomplete="name">
+  <label for="u-title">Titel</label><input id="u-title">
+  <label for="u-cat">Kop (Alleen audio!)</label><input id="u-cat" list="cats">
+  <datalist id="cats"></datalist>
+  <label for="u-desc">Text voor onder de productie (audio and video)</label><textarea id="u-desc" rows="4"></textarea>
+  <label for="u-file">Bestand</label><input id="u-file" type="file" accept="audio/*,video/*,.pdf">
+  <p class="msg" id="u-msg" role="status"></p>
+  <div class="row"><button id="u-close">Sluiten</button><button class="red" id="u-go">Publiceren</button></div>
 </dialog>
 
-<dialog id="up" class="sm">
-  <h2 style="margin-top:0">Upload bestanden/h2>
-  <p>Upload hier je bestanden maximaal 50 MB (Audio: mp3, wav, ogg, m4a, aac, flac Video: mp4, webm, mov Text: txt, md, csv, json, docx, and pdf)</p>
-  <label for="up-name">Your name</label><input id="up-name" autocomplete="name">
-  <label for="up-files">Files</label><input id="up-files" type="file" multiple accept="audio/*,video/*,.txt,.md,.csv,.json,.docx,.pdf">
-  <p class="msg" id="up-msg" role="status"></p>
-  <div class="row"><button id="up-close">Afsluiten</button><button class="primary" id="up-go">Uploaden</button></div>
-</dialog>
-
-<dialog id="adm" class="sm">
-  <h2 style="margin-top:0">Admin login</h2>
+<dialog id="adm">
+  <h2 class="serif" style="margin-top:0">Inloggen</h2>
   <label for="a-mail">Email</label><input id="a-mail" type="email" autocomplete="username">
   <label for="a-pass">Wachtwoord</label><input id="a-pass" type="password" autocomplete="current-password">
   <p class="msg" id="a-msg" role="status"></p>
-  <div class="row"><button id="a-close">Afsluiten</button><button class="primary" id="a-go">Inloggen</button></div>
+  <div class="row"><button id="a-close">Sluiten</button><button class="red" id="a-go">Inloggen</button></div>
 </dialog>
+
 
 <script>
 /* ===== 1. Paste your two Supabase values here (Project Settings → API) ===== */
@@ -97,181 +109,201 @@ const SUPABASE_KEY = "sb_publishable_j0Y6VlpoZRlmpCupVtudTw_yzeJhJru";
 /* ========================================================================== */
 
 const INTERVAL = 15000;
-const EXT = {
-  audio:["mp3","wav","ogg","m4a","aac","flac","oga"],
-  video:["mp4","webm","mov","m4v","ogv"],
-  text:["txt","md","csv","json","docx","pdf","rtf"]
-};
-const LABEL = {audio:"Audio", video:"Video", text:"Text"};
+const EXT = {audio:["mp3","wav","ogg","m4a","aac","flac","oga"], video:["mp4","webm","mov","m4v","ogv"], text:["pdf"]};
+const KIND = {audio:"Audio", video:"Video", text:"Newspaper"};
+const WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 const $ = s => document.querySelector(s);
 const ext = n => n.split(".").pop().toLowerCase();
 const kindOf = n => Object.keys(EXT).find(k=>EXT[k].includes(ext(n)));
-const setStatus = t => $("#status").textContent = t;
-const natural = (a,b) => a.name.localeCompare(b.name,undefined,{numeric:true});
-
+function el(t,c,x){ const e=document.createElement(t); if(c) e.className=c; if(x!=null) e.textContent=x; return e; }
+function link(t,href,c){ const a=el("a",c,t); a.href=href; return a; }
+const app = $("#app");
 const configured = !SUPABASE_URL.includes("YOUR-PROJECT");
 const sb = configured ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-let items = [], isAdmin = false, current;
-
-/* ---------- load ---------- */
+let items = [], me = null, timer, keyH;
+const byKind = k => items.filter(i=>i.kind===k);
+const find = id => items.find(i=>i.id===id);
+ 
+/* ---------- data ---------- */
 async function load(){
-  if(!configured){ setStatus("Setup needed: add your Supabase URL and key at the top of index.html."); render(); return; }
-  const { data, error } = await sb.from("files").select("*");
-  if(error){ setStatus("Could not load files: "+error.message); return; }
-  items = data.map(f=>({...f, url: sb.storage.from("media").getPublicUrl(f.path).data.publicUrl})).sort(natural);
-  const pending = items.filter(i=>!i.approved).length;
-  setStatus(isAdmin ? `Student mode · ${pending} wachten op bevestiging` : "");
-  render(); renderReview();
+  if(!configured){ $("#status").textContent="Setup needed: add your Supabase URL and key at the top of index.html."; menu(); show(); return; }
+  const {data,error} = await sb.from("files").select("*").order("created_at",{ascending:false});
+  if(error){ $("#status").textContent="Could not load files: "+error.message; return; }
+  items = data.map(f=>({...f,url:sb.storage.from("media").getPublicUrl(f.path).data.publicUrl}));
+  $("#cats").replaceChildren(...[...new Set(byKind("audio").map(a=>a.category).filter(Boolean))].map(c=>{const o=el("option"); o.value=c; return o;}));
+  menu(); show();
 }
-if(configured){
-  sb.auth.getSession().then(({data})=>{ isAdmin=!!data.session; $("#open-admin").textContent = isAdmin?"Log out":"Student login"; load(); });
-} else load();
-
-/* ---------- student upload ---------- */
-$("#open-up").onclick = () => { $("#up-msg").textContent=""; $("#up").showModal(); };
-$("#up-close").onclick = () => $("#up").close();
-const upMsg = t => $("#up-msg").textContent = t;
-$("#up-go").onclick = async () => {
-  if(!configured) return upMsg("De site is nog niet verbonden aan de database.");
-  const files=[...$("#up-files").files], who=$("#up-name").value.trim();
-  if(!who || !files.length) return upMsg("Add your name and at least one file.");
-  $("#up-go").disabled = true; let ok = 0;
-  for(const f of files){
-    const kind = kindOf(f.name);
-    if(!kind){ upMsg(`${f.name}: file type not supported.`); continue; }
-    if(f.size > 50*1024*1024){ upMsg(`${f.name} is groter dan 50 MB`); continue; }
-    upMsg(`Uploading ${f.name}…`);
-    const path = crypto.randomUUID()+"."+ext(f.name);
-    const r1 = await sb.rpc("submit_file",{p_name:f.name,p_kind:kind,p_path:path,p_uploader:who});
-    if(r1.error){ upMsg("Could not register file: "+r1.error.message); break; }
-    const r2 = await sb.storage.from("media").upload(path,f,{contentType:f.type||undefined});
-    if(r2.error){ upMsg(`Upload mislukt op bestand: ${f.name}: ${r2.error.message}`); break; }
-    ok++;
-  }
-  $("#up-go").disabled = false;
-  if(ok){ upMsg(`Gelukt! ${ok} file${ok>1?"s":""} `); $("#up-files").value=""; load(); }
-};
-
-/* ---------- teacher login ---------- */
-$("#open-admin").onclick = async () => {
-  if(isAdmin){ await sb.auth.signOut(); isAdmin=false; $("#open-admin").textContent="Teacher login"; load(); return; }
-  if(!configured) return setStatus("Add your Supabase details first.");
-  $("#a-msg").textContent=""; $("#adm").showModal();
-};
-$("#a-close").onclick = () => $("#adm").close();
-$("#a-go").onclick = async () => {
-  const { error } = await sb.auth.signInWithPassword({email:$("#a-mail").value.trim(),password:$("#a-pass").value});
-  if(error) return $("#a-msg").textContent = "Inloggen mislukt: "+error.message;
-  isAdmin = true; $("#a-pass").value=""; $("#adm").close(); $("#open-admin").textContent="Log out"; load();
-};
-
-/* ---------- approval panel ---------- */
-function renderReview(){
-  document.querySelector("#review")?.remove();
-  const pend = items.filter(i=>!i.approved);
-  if(!isAdmin || !pend.length) return;
-  const s = document.createElement("section"); s.id="review";
-  s.innerHTML = `<h2>Waiting for approval <span>${pend.length}</span></h2>`;
-  pend.forEach(it=>{
-    const r = document.createElement("div"); r.className="rv";
-    r.innerHTML = `<div><b></b><br><small></small></div><div class="actions"><button>Preview</button><button class="primary">Approve</button><button>Reject</button></div>`;
-    r.querySelector("b").textContent = it.name;
-    r.querySelector("small").textContent = `${LABEL[it.kind]} · by ${it.uploader||"unknown"}`;
-    const [pv,ap,rj] = r.querySelectorAll("button");
-    pv.onclick = () => openItem(it);
-    ap.onclick = async () => { const {error}=await sb.from("files").update({approved:true}).eq("id",it.id); error?setStatus(error.message):load(); };
-    rj.onclick = () => removeItem(it);
-    s.append(r);
+if(configured) sb.auth.getSession().then(({data})=>{ me=data.session?.user||null; load(); }); else load();
+ 
+/* ---------- menu ---------- */
+function menu(){
+  const n = $("#nav"); n.replaceChildren(link("Newspaper","#/krant"), link("Audio","#/audio"), link("Video","#/video"));
+  const b = el("button",null,me?"Log out":"Login");
+  b.onclick = async () => { $("#menu").open=false; if(me){ await sb.auth.signOut(); me=null; location.hash="#/"; load(); } else if(configured){ $("#a-msg").textContent=""; $("#adm").showModal(); } };
+  n.append(b);
+}
+$("#nav").addEventListener("click",()=>setTimeout(()=>$("#menu").open=false));
+document.addEventListener("click",e=>{ if(!$("#menu").contains(e.target)) $("#menu").open=false; });
+ 
+/* ---------- router ---------- */
+window.addEventListener("hashchange",show);
+function show(){
+  clearInterval(timer); document.removeEventListener("keydown",keyH); window.scrollTo(0,0); app.replaceChildren();
+  const [,p,id] = (location.hash.slice(1)||"/").split("/");
+  if(p==="v") article(id,"video"); else if(p==="a") article(id,"audio");
+  else if(p==="krant") krant(id); else if(p==="audio") audioPage(); else if(p==="video") videoPage();
+  else home();
+}
+const head = (t,href) => { const h=el("h2","kop"); h.append(el("span",null,t)); if(href) h.append(link("All →",href)); return h; };
+ 
+/* ---------- home ---------- */
+function home(){
+  const top = el("div","grid2"), l = el("section"), r = el("section");
+  l.append(head("Video","#/video"), slideshow(byKind("video")));
+  r.append(head("Newspaper","#/krant")); paperCard(r);
+  top.append(l,r); app.append(top, audioBlocks(4));
+}
+function slideshow(list){
+  const box = el("div"), stage = el("div","stage"); box.append(stage);
+  if(!list.length){ box.replaceChildren(el("p","empty","No videos yet.")); return box; }
+  const slides = list.map(it=>{
+    const a = link("", "#/v/"+it.id, "slide"), v = document.createElement("video");
+    v.muted=true; v.preload="metadata"; v.src=it.url+"#t=0.5";
+    const t = el("div","t",it.name); t.append(el("small",null,"by "+(it.uploader||"unknown")));
+    a.append(v,el("div","play"),t); stage.append(a); return a;
   });
-  $("#main").prepend(s);
+  const prev=el("button",null,"‹"), next=el("button",null,"›"), dots=el("div","dots"), bar=el("div","bar"), fill=el("b");
+  prev.setAttribute("aria-label","Previous video"); next.setAttribute("aria-label","Next video");
+  list.forEach(()=>dots.append(el("i"))); bar.append(fill);
+  const ctl = el("div","ctl"); ctl.append(prev,dots,next); box.append(ctl,bar);
+  let i=0,t0=0,hover=false;
+  const go = n => { i=(n+list.length)%list.length; slides.forEach((s,j)=>s.classList.toggle("on",j===i)); [...dots.children].forEach((d,j)=>d.classList.toggle("on",j===i)); t0=performance.now(); };
+  prev.onclick=()=>go(i-1); next.onclick=()=>go(i+1);
+  box.onmouseenter=()=>hover=true; box.onmouseleave=()=>{hover=false;t0=performance.now()};
+  go(0);
+  timer = setInterval(()=>{ if(hover||document.hidden){ t0=performance.now(); fill.style.width="0"; return; }
+    const e=performance.now()-t0; fill.style.width=Math.min(100,e/INTERVAL*100)+"%"; if(e>=INTERVAL) go(i+1); },100);
+  return box;
+}
+async function paperCard(into){
+  const it = byKind("text")[0];
+  if(!it){ into.append(el("p","empty","No newspaper yet.")); return; }
+  const a = link("", "#/krant/"+it.id, "card"); const c = document.createElement("canvas"); c.style.cssText="width:100%;border:1px solid var(--line);display:block;margin-bottom:6px";
+  a.append(c, el("span","k","Latest edition"), el("b",null,it.name), el("small",null,"Read the newspaper →")); into.append(a);
+  try{ await pdfInit(); const pdf=await pdfjsLib.getDocument(it.url).promise, pg=await pdf.getPage(1), v0=pg.getViewport({scale:1}), vp=pg.getViewport({scale:500/v0.width});
+    c.width=vp.width; c.height=vp.height; await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise; }catch(_){ c.remove(); }
+}
+function audioBlocks(limit){
+  const wrap = el("div"), groups = {};
+  byKind("audio").forEach(a=>(groups[a.category||"More audio"] ||= []).push(a));
+  const names = Object.keys(groups);
+  if(!names.length){ wrap.append(head("Audio","#/audio"), el("p","empty","No audio yet.")); return wrap; }
+  names.forEach((c,idx)=>{
+    wrap.append(head(c, idx===0&&limit<99?"#/audio":null));
+    const g = el("div","cards");
+    groups[c].slice(0,limit).forEach(a=>{ const k=link("","#/a/"+a.id,"card"); k.append(el("span","k","Audio"),el("b",null,a.name),el("small",null,"by "+(a.uploader||"unknown"))); g.append(k); });
+    wrap.append(g);
+  });
+  return wrap;
+}
+function audioPage(){ app.append(el("h1","h1","Audio"), audioBlocks(999)); }
+function videoPage(){
+  app.append(el("h1","h1","Video")); const g=el("div","cards"), list=byKind("video");
+  if(!list.length) app.append(el("p","empty","No videos yet."));
+  list.forEach(v=>{ const k=link("","#/v/"+v.id,"card"), t=document.createElement("video"); t.className="thumb"; t.muted=true; t.preload="metadata"; t.src=v.url+"#t=0.5";
+    k.append(t,el("span","k","Video"),el("b",null,v.name),el("small",null,"by "+(v.uploader||"unknown"))); g.append(k); });
+  app.append(g);
+}
+ 
+/* ---------- audio / video page ---------- */
+function article(id,kind){
+  const it = find(id);
+  if(!it || it.kind!==kind){ app.append(el("p","empty","This production was not found.")); return; }
+  const a = el("article","art"), m = document.createElement(kind==="video"?"video":"audio");
+  m.controls=true; m.autoplay=true; m.src=it.url;
+  a.append(link("← Back",kind==="video"?"#/video":"#/audio"), el("div","kick",(it.category||KIND[kind])), el("h1",null,it.name), el("div","muted","by "+(it.uploader||"unknown")+" · "+new Date(it.created_at).toLocaleDateString()), m);
+  if(it.description) a.append(el("p",null,it.description));
+  a.append(adminBar(it)); app.append(a);
+}
+function adminBar(it){
+  const d = el("div","kbar");
+  if(me && (it.owner===me.id || me.app_metadata?.role==="teacher")){ const rm=el("button",null,"Delete"); rm.onclick=()=>removeItem(it); d.append(rm); }
+  return d;
 }
 async function removeItem(it){
   if(!confirm(`Remove ${it.name}?`)) return;
   await sb.storage.from("media").remove([it.path]);
-  const {error} = await sb.from("files").delete().eq("id",it.id);
-  error ? setStatus("Delete failed: "+error.message) : load();
+  const {error}=await sb.from("files").delete().eq("id",it.id);
+  if(error) alert(error.message); else { location.hash="#/"; load(); }
 }
-
-/* ---------- slideshows ---------- */
-const shows = {};
-let paused = 0;
-function render(){
-  Object.values(shows).forEach(s=>clearInterval(s.timer));
-  [...$("#main").querySelectorAll("section[data-k]")].forEach(e=>e.remove());
-  for(const k of ["audio","video","text"]){
-    const list = items.filter(i=>i.kind===k && i.approved);
-    const sec = document.createElement("section"); sec.dataset.k = k;
-    sec.innerHTML = `<h2>${LABEL[k]} <span>${list.length}</span></h2><div class="stage"></div><div class="ctl"><button aria-label="Previous">‹</button><div class="dots"></div><button aria-label="Next">›</button></div><div class="bar"><b></b></div>`;
-    $("#main").append(sec);
-    const stage = sec.querySelector(".stage");
-    if(!list.length){ stage.innerHTML = `<div class="empty">Geen ${LABEL[k].toLowerCase()} bestanden gevonden.</div>`; continue; }
-    const slides = list.map(it=>{
-      const b = document.createElement("button"); b.className="slide"; b.setAttribute("aria-label","Open "+it.name);
-      if(k==="video") b.innerHTML = `<video muted preload="metadata" src="${it.url}#t=0.5"></video><div class="play"></div><div class="t"></div>`;
-      if(k==="audio") b.innerHTML = `<div class="play"></div><div class="t"></div>`;
-      if(k==="text"){ b.innerHTML = `<div class="ex">Loading preview…</div><div class="t"></div>`; textOf(it).then(t=>b.querySelector(".ex").textContent = t ? t.slice(0,500) : "Open to view this file."); }
-      const t = b.querySelector(".t"); t.textContent = it.name;
-      if(it.uploader){ const sm=document.createElement("small"); sm.textContent="by "+it.uploader; t.append(sm); }
-      b.onclick = () => openItem(it);
-      stage.append(b); return b;
-    });
-    const dots = sec.querySelector(".dots"); dots.innerHTML = list.map(()=>"<i></i>").join("");
-    const bar = sec.querySelector(".bar b");
-    const S = shows[k] = {i:0, t0:0};
-    const go = n => {
-      S.i = (n+list.length)%list.length;
-      slides.forEach((s,j)=>s.classList.toggle("on",j===S.i));
-      [...dots.children].forEach((d,j)=>d.classList.toggle("on",j===S.i));
-      S.t0 = performance.now();
-    };
-    const [prev,next] = sec.querySelectorAll(".ctl button");
-    prev.onclick = () => go(S.i-1); next.onclick = () => go(S.i+1);
-    go(0);
-    S.timer = setInterval(()=>{
-      if(paused||document.hidden){ S.t0 = performance.now(); bar.style.width="0"; return; }
-      const el = performance.now()-S.t0; bar.style.width = Math.min(100,el/INTERVAL*100)+"%";
-      if(el>=INTERVAL) go(S.i+1);
-    },100);
+ 
+/* ---------- newspaper ---------- */
+let wk; const pdfInit = () => wk ||= fetch(WORKER).then(r=>r.blob()).then(b=>{ pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(b); });
+async function krant(id){
+  const eds = byKind("text"), it = eds.find(e=>e.id===id)||eds[0];
+  app.append(el("h1","h1","Newspaper"));
+  if(!it){ app.append(el("p","empty","No newspaper has been published yet.")); return; }
+  const bar=el("div","kbar"), prev=el("button",null,"‹ Previous"), next=el("button",null,"Next ›"), info=el("span","muted"), dl=el("button","red","Download PDF"), spread=el("div","spread paper");
+  if(eds.length>1){ const s=document.createElement("select"); eds.forEach(e=>{ const o=el("option",null,e.name); o.value=e.id; o.selected=e===it; s.append(o); }); s.setAttribute("aria-label","Edition"); s.onchange=()=>location.hash="#/krant/"+s.value; bar.append(s); }
+  else bar.append(el("strong",null,it.name));
+  bar.append(prev,info,next,dl); app.append(bar,spread,adminBar(it));
+  dl.onclick = async () => { const b=await (await fetch(it.url)).blob(), a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=it.name.replace(/\.pdf$/i,"")+".pdf"; a.click(); };
+  spread.textContent="Loading…";
+  let pdf; try{ await pdfInit(); pdf = await pdfjsLib.getDocument(it.url).promise; }catch(e){ spread.textContent="Could not open this PDF."; return; }
+  let n=1, seq=0; const per=()=>spread.clientWidth<700?1:2;
+  async function draw(){
+    const my=++seq, k=per(), w=Math.floor((spread.clientWidth-24-(k-1)*8)/k), cs=[];
+    for(let p=n;p<n+k&&p<=pdf.numPages;p++){
+      const pg=await pdf.getPage(p), v0=pg.getViewport({scale:1}), vp=pg.getViewport({scale:w/v0.width*(devicePixelRatio||1)}), c=document.createElement("canvas");
+      c.width=vp.width; c.height=vp.height; c.style.width=w+"px"; await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise; cs.push(c);
+    }
+    if(my!==seq) return;
+    spread.replaceChildren(...cs);
+    info.textContent=`Page ${n}${cs.length>1?"–"+(n+1):""} of ${pdf.numPages}`;
+    prev.disabled=n<=1; next.disabled=n+k>pdf.numPages;
   }
+  const flip = d => { const k=per(), m=Math.min(Math.max(1,n+d*k),pdf.numPages); if(m!==n){ n=m; draw(); } };
+  prev.onclick=()=>flip(-1); next.onclick=()=>flip(1);
+  keyH = e => { if(e.key==="ArrowRight") flip(1); if(e.key==="ArrowLeft") flip(-1); };
+  document.addEventListener("keydown",keyH);
+  draw();
 }
-
-/* ---------- text reading ---------- */
-const cache = new Map();
-async function textOf(it){
-  if(cache.has(it.url)) return cache.get(it.url);
-  let out = "";
-  try{
-    const e = ext(it.name), buf = await (await fetch(it.url)).arrayBuffer();
-    if(e==="docx" && window.mammoth) out = (await mammoth.extractRawText({arrayBuffer:buf})).value;
-    else if(["txt","md","csv","json","rtf"].includes(e)) out = new TextDecoder().decode(buf);
-  }catch(_){}
-  cache.set(it.url,out); return out;
-}
-
-/* ---------- viewer ---------- */
-function openItem(it){
-  current = it; paused++;
-  const box = $("#vbody"); box.innerHTML = "";
-  const h = document.createElement("h2"); h.style.marginTop=0;
-  h.textContent = it.name + (it.uploader ? " · by "+it.uploader : ""); box.append(h);
-  if(it.kind==="video"){ const v=document.createElement("video"); v.controls=true; v.autoplay=true; v.src=it.url; box.append(v); }
-  else if(it.kind==="audio"){ const a=document.createElement("audio"); a.controls=true; a.autoplay=true; a.src=it.url; box.append(a); }
-  else if(ext(it.name)==="pdf"){ const f=document.createElement("iframe"); f.src=it.url; f.style.cssText="width:100%;height:65vh;border:0"; box.append(f); }
-  else { const p=document.createElement("pre"); p.textContent="Loading…"; box.append(p); textOf(it).then(t=>p.textContent=t||"This file can’t be previewed."); }
-  $("#del").hidden = !isAdmin;
-  $("#viewer").showModal();
-}
-$("#viewer").addEventListener("close",()=>{ $("#vbody").innerHTML=""; paused=Math.max(0,paused-1); });
-$("#close").onclick = () => $("#viewer").close();
-$("#del").onclick = async () => { const it=current; $("#viewer").close(); await removeItem(it); };
-
-/* ---------- drag & drop opens the upload form ---------- */
-window.addEventListener("dragover",e=>{e.preventDefault();document.body.id="drop"});
-window.addEventListener("dragleave",e=>{ if(!e.relatedTarget) document.body.id=""; });
-window.addEventListener("drop",e=>{
-  e.preventDefault(); document.body.id="";
-  if(e.dataTransfer.files.length){ $("#up-files").files = e.dataTransfer.files; $("#up-msg").textContent=""; $("#up").showModal(); }
-});
+ 
+/* ---------- upload (logged-in accounts only) ---------- */
+function needLogin(msg){ $("#a-msg").textContent=msg||""; $("#adm").showModal(); }
+$("#open-up").onclick = () => {
+  if(!configured) return;
+  if(!me) return needLogin("Log in to upload.");
+  $("#u-msg").textContent=""; $("#up").showModal();
+};
+$("#u-close").onclick = () => $("#up").close();
+const um = t => $("#u-msg").textContent = t;
+$("#u-go").onclick = async () => {
+  if(!me) return um("Please log in first.");
+  const f=$("#u-file").files[0], who=$("#u-name").value.trim();
+  if(!who||!f) return um("Add your name and a file.");
+  const kind=kindOf(f.name); if(!kind) return um("File type not supported.");
+  if(f.size>50*1024*1024) return um("That file is over 50 MB. Compress it first.");
+  const title=$("#u-title").value.trim()||f.name.replace(/\.[^.]+$/,"");
+  const cat=kind==="audio"?($("#u-cat").value.trim()||"More audio"):null, desc=kind==="text"?null:$("#u-desc").value.trim()||null;
+  $("#u-go").disabled=true; um("Uploading…");
+  const path=crypto.randomUUID()+"."+ext(f.name);
+  const r2=await sb.storage.from("media").upload(path,f,{contentType:f.type||undefined});
+  if(r2.error){ $("#u-go").disabled=false; return um("Upload failed: "+r2.error.message); }
+  const r1=await sb.from("files").insert({name:title,kind,path,uploader:who,category:cat,description:desc});
+  $("#u-go").disabled=false;
+  if(r1.error){ await sb.storage.from("media").remove([path]); return um("Could not save: "+r1.error.message); }
+  um("Published!"); ["#u-title","#u-cat","#u-desc","#u-file"].forEach(x=>$(x).value=""); load();
+};
+ 
+/* ---------- login ---------- */
+$("#a-close").onclick = () => $("#adm").close();
+$("#a-go").onclick = async () => {
+  const {data,error}=await sb.auth.signInWithPassword({email:$("#a-mail").value.trim(),password:$("#a-pass").value});
+  if(error) return $("#a-msg").textContent="Login failed: "+error.message;
+  me=data.user; $("#a-pass").value=""; $("#adm").close(); load();
+};
 </script>
+
 </body>
 </html>
