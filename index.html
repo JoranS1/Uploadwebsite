@@ -151,33 +151,33 @@ function show(){
   clearInterval(timer); document.removeEventListener("keydown",keyH); window.scrollTo(0,0); app.replaceChildren();
   const [,p,id] = (location.hash.slice(1)||"/").split("/");
   if(p==="v") article(id,"video"); else if(p==="a") article(id,"audio");
-  else if(p==="krant") krant(id); else if(p==="audio") audioPage(); else if(p==="video") videoPage();
-  else home();
+  else if(p==="krant") krant(id);
+  else { home(); if(p==="audio"||p==="video") setTimeout(()=>document.getElementById(p)?.scrollIntoView(),50); }
 }
 const head = (t,href) => { const h=el("h2","kop"); h.append(el("span",null,t)); if(href) h.append(link("All →",href)); return h; };
  
 /* ---------- home ---------- */
 function home(){
-  const top = el("div","grid2"), l = el("section"), r = el("section");
-  l.append(head("Video","#/video"), slideshow(byKind("video")));
+  const top = el("div","grid2"), l = el("section"), r = el("section"); l.id="video";
+  l.append(head("Video"), slideshow(byKind("video")));
   r.append(head("Newspaper","#/krant")); paperCard(r);
-  top.append(l,r); app.append(top, audioBlocks(4));
+  const au = audioBlocks(); au.id="audio"; top.append(l,r); app.append(top, au);
 }
 function slideshow(list){
   const box = el("div"), stage = el("div","stage"); box.append(stage);
   if(!list.length){ box.replaceChildren(el("p","empty","No videos yet.")); return box; }
   const slides = list.map(it=>{
     const a = link("", "#/v/"+it.id, "slide"), v = document.createElement("video");
-    v.muted=true; v.preload="metadata"; v.src=it.url+"#t=0.5";
+    v.muted=true; v.loop=true; v.playsInline=true; v.preload="metadata"; v.src=it.url;
     const t = el("div","t",it.name); t.append(el("small",null,"by "+(it.uploader||"unknown")));
-    a.append(v,el("div","play"),t); stage.append(a); return a;
+    a.append(v,t); stage.append(a); return a;
   });
   const prev=el("button",null,"‹"), next=el("button",null,"›"), dots=el("div","dots"), bar=el("div","bar"), fill=el("b");
   prev.setAttribute("aria-label","Previous video"); next.setAttribute("aria-label","Next video");
   list.forEach(()=>dots.append(el("i"))); bar.append(fill);
   const ctl = el("div","ctl"); ctl.append(prev,dots,next); box.append(ctl,bar);
   let i=0,t0=0,hover=false;
-  const go = n => { i=(n+list.length)%list.length; slides.forEach((s,j)=>s.classList.toggle("on",j===i)); [...dots.children].forEach((d,j)=>d.classList.toggle("on",j===i)); t0=performance.now(); };
+  const go = n => { i=(n+list.length)%list.length; slides.forEach((s,j)=>{ s.classList.toggle("on",j===i); const v=s.firstChild; if(j===i){ v.currentTime=0; v.play().catch(()=>{}); } else v.pause(); }); [...dots.children].forEach((d,j)=>d.classList.toggle("on",j===i)); t0=performance.now(); };
   prev.onclick=()=>go(i-1); next.onclick=()=>go(i+1);
   box.onmouseenter=()=>hover=true; box.onmouseleave=()=>{hover=false;t0=performance.now()};
   go(0);
@@ -193,28 +193,19 @@ async function paperCard(into){
   try{ await pdfInit(); const pdf=await pdfjsLib.getDocument(it.url).promise, pg=await pdf.getPage(1), v0=pg.getViewport({scale:1}), vp=pg.getViewport({scale:500/v0.width});
     c.width=vp.width; c.height=vp.height; await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise; }catch(_){ c.remove(); }
 }
-function audioBlocks(limit){
+function audioBlocks(){
   const wrap = el("div"), groups = {};
   byKind("audio").forEach(a=>(groups[a.category||"More audio"] ||= []).push(a));
   const names = Object.keys(groups);
-  if(!names.length){ wrap.append(head("Audio","#/audio"), el("p","empty","No audio yet.")); return wrap; }
-  names.forEach((c,idx)=>{
-    wrap.append(head(c, idx===0&&limit<99?"#/audio":null));
+  if(!names.length){ wrap.append(head("Audio"), el("p","empty","No audio yet.")); return wrap; }
+  names.forEach(c=>{
+    wrap.append(head(c));
     const g = el("div","cards");
-    groups[c].slice(0,limit).forEach(a=>{ const k=link("","#/a/"+a.id,"card"); k.append(el("span","k","Audio"),el("b",null,a.name),el("small",null,"by "+(a.uploader||"unknown"))); g.append(k); });
+    groups[c].forEach(a=>{ const k=link("","#/a/"+a.id,"card"); k.append(el("span","k","Audio"),el("b",null,a.name),el("small",null,"by "+(a.uploader||"unknown"))); g.append(k); });
     wrap.append(g);
   });
   return wrap;
 }
-function audioPage(){ app.append(el("h1","h1","Audio"), audioBlocks(999)); }
-function videoPage(){
-  app.append(el("h1","h1","Video")); const g=el("div","cards"), list=byKind("video");
-  if(!list.length) app.append(el("p","empty","No videos yet."));
-  list.forEach(v=>{ const k=link("","#/v/"+v.id,"card"), t=document.createElement("video"); t.className="thumb"; t.muted=true; t.preload="metadata"; t.src=v.url+"#t=0.5";
-    k.append(t,el("span","k","Video"),el("b",null,v.name),el("small",null,"by "+(v.uploader||"unknown"))); g.append(k); });
-  app.append(g);
-}
- 
 /* ---------- audio / video page ---------- */
 function article(id,kind){
   const it = find(id);
@@ -304,6 +295,7 @@ $("#a-go").onclick = async () => {
   me=data.user; $("#a-pass").value=""; $("#adm").close(); load();
 };
 </script>
+
 
 </body>
 </html>
