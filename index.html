@@ -73,7 +73,6 @@ dialog label{display:block;margin:10px 0 2px;font-size:.9rem;color:var(--mute)}
 dialog input,dialog textarea{width:100%;font:inherit;padding:8px;border:1px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:0}
 .msg{min-height:1.5em;color:var(--mute)}
 footer{border-top:1px solid var(--line);margin-top:40px;padding:20px 0;color:var(--mute);font-size:.85rem}
-
 </style>
 
 </head>
@@ -178,10 +177,8 @@ const head = (t,href) => { const h=el("h2","kop"); h.append(el("span",null,t)); 
  
 /* ---------- home ---------- */
 function home(){
-  const top = el("div","grid2"), l = el("section"), r = el("section"); l.id="video";
-  l.append(head("Video"), slideshow(byKind("video")));
-  r.append(head("Newspaper","#/krant")); paperCard(r);
-  const au = audioBlocks(); au.id="audio"; top.append(l,r); app.append(top, au);
+  const l = el("section"); l.id="video"; l.append(head("Video"), slideshow(byKind("video")));
+  const au = audioBlocks(); au.id="audio"; app.append(l, au);
 }
 function slideshow(list){
   const box = el("div"), stage = el("div","stage"); box.append(stage);
@@ -207,14 +204,6 @@ function slideshow(list){
   timer = setInterval(()=>{ if(hover||document.hidden){ t0=performance.now(); fill.style.width="0"; return; }
     const e=performance.now()-t0; fill.style.width=Math.min(100,e/INTERVAL*100)+"%"; if(e>=INTERVAL) go(i+1); },100);
   return box;
-}
-async function paperCard(into){
-  const it = byKind("text")[0];
-  if(!it){ into.append(el("p","empty","No newspaper yet.")); return; }
-  const a = link("", "#/krant/"+it.id, "card"); const c = document.createElement("canvas"); c.style.cssText="width:100%;border:1px solid var(--line);display:block;margin-bottom:6px";
-  a.append(c, el("span","k","Latest edition"), el("b",null,it.name), el("small",null,"Read the newspaper →")); into.append(a);
-  try{ await pdfInit(); const pdf=await pdfjsLib.getDocument(it.url).promise, pg=await pdf.getPage(1), v0=pg.getViewport({scale:1}), vp=pg.getViewport({scale:500/v0.width});
-    c.width=vp.width; c.height=vp.height; await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise; }catch(_){ c.remove(); }
 }
 function audioBlocks(){
   const wrap = el("div"), groups = {};
