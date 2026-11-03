@@ -49,6 +49,10 @@ details nav a:hover,details nav button:hover{background:var(--ink)!important;col
 .play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;border-radius:50%;background:var(--red)}
 .play:after{content:"";position:absolute;left:24px;top:18px;border-left:20px solid #fff;border-top:12px solid transparent;border-bottom:12px solid transparent}
 .empty{color:var(--mute);padding:30px 0}
+.emb,.emb iframe{position:absolute;inset:0;width:100%;height:100%;border:0}.emb iframe{pointer-events:none}
+#video{margin-bottom:32px}#video .stage{max-height:58vh}
+.slide .cover{position:absolute;inset:0}
+.art iframe{width:100%;aspect-ratio:16/9;border:0;display:block;margin:16px 0;background:#000}
 .ctl{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:8px}
 .dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}.dots i{width:9px;height:9px;background:var(--line)}.dots i.on{background:var(--red)}
 .bar{height:3px;background:var(--line);margin-top:10px}.bar b{display:block;height:100%;width:0;background:var(--red)}
@@ -69,6 +73,7 @@ dialog label{display:block;margin:10px 0 2px;font-size:.9rem;color:var(--mute)}
 dialog input,dialog textarea{width:100%;font:inherit;padding:8px;border:1px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:0}
 .msg{min-height:1.5em;color:var(--mute)}
 footer{border-top:1px solid var(--line);margin-top:40px;padding:20px 0;color:var(--mute);font-size:.85rem}
+
 </style>
 
 </head>
@@ -88,7 +93,9 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:20px 0;color:var
   <label for="u-cat">Kop (Alleen audio!)</label><input id="u-cat" list="cats">
   <datalist id="cats"></datalist>
   <label for="u-desc">Text voor onder de productie (audio and video)</label><textarea id="u-desc" rows="4"></textarea>
-  <label for="u-file">Bestand</label><input id="u-file" type="file" accept="audio/*,video/*,.pdf">
+  <label for="u-file">File</label><input id="u-file" type="file" accept="audio/*,video/*,.pdf">
+  <label for="u-link">Of een YouTube link (verborgen of publiekelijk)</label><input id="u-link" placeholder="https://youtu.be/…">
+
   <p class="msg" id="u-msg" role="status"></p>
   <div class="row"><button id="u-close">Sluiten</button><button class="red" id="u-go">Publiceren</button></div>
 </dialog>
@@ -321,8 +328,5 @@ $("#a-go").onclick = async () => {
   me=data.user; $("#a-pass").value=""; $("#adm").close(); load();
 };
 </script>
-
-
-
 </body>
 </html>
