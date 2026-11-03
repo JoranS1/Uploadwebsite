@@ -109,6 +109,7 @@ const SUPABASE_KEY = "sb_publishable_j0Y6VlpoZRlmpCupVtudTw_yzeJhJru";
 /* ========================================================================== */
 
 const INTERVAL = 15000;
+const MAX_MB = 50;   // Supabase Free plan limit; bigger videos go in as YouTube/Vimeo links
 const EXT = {audio:["mp3","wav","ogg","m4a","aac","flac","oga"], video:["mp4","webm","mov","m4v","ogv"], text:["pdf"]};
 const KIND = {audio:"Audio", video:"Video", text:"Newspaper"};
 const WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
@@ -121,6 +122,18 @@ const app = $("#app");
 const configured = !SUPABASE_URL.includes("YOUR-PROJECT");
 const sb = configured ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 let items = [], me = null, timer, keyH;
+function embedOf(u){
+  let m;
+  if((m=u.match(/(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/))){
+    const id=m[1], b="https://www.youtube-nocookie.com/embed/"+id;
+    return {preview:`${b}?autoplay=1&mute=1&controls=0&loop=1&playlist=${id}&playsinline=1&rel=0`, full:`${b}?autoplay=1&rel=0`};
+  }
+  if((m=u.match(/vimeo\.com\/(?:video\/)?(\d+)(?:\/([a-f0-9]+))?/))){
+    const h=m[2]||(u.match(/[?&]h=([a-f0-9]+)/)||[])[1], q=h?`h=${h}&`:"", b="https://player.vimeo.com/video/"+m[1];
+    return {preview:`${b}?${q}background=1&autoplay=1&muted=1&loop=1`, full:`${b}?${q}autoplay=1`};
+  }
+  return null;
+}
 const byKind = k => items.filter(i=>i.kind===k);
 const find = id => items.find(i=>i.id===id);
  
@@ -129,7 +142,7 @@ async function load(){
   if(!configured){ $("#status").textContent="Setup needed: add your Supabase URL and key at the top of index.html."; menu(); show(); return; }
   const {data,error} = await sb.from("files").select("*").order("created_at",{ascending:false});
   if(error){ $("#status").textContent="Could not load files: "+error.message; return; }
-  items = data.map(f=>({...f,url:sb.storage.from("media").getPublicUrl(f.path).data.publicUrl}));
+  items = data.map(f=>{ const link=/^https?:/.test(f.path); return {...f,link,url:link?f.path:sb.storage.from("media").getPublicUrl(f.path).data.publicUrl}; });
   $("#cats").replaceChildren(...[...new Set(byKind("audio").map(a=>a.category).filter(Boolean))].map(c=>{const o=el("option"); o.value=c; return o;}));
   menu(); show();
 }
@@ -167,17 +180,20 @@ function slideshow(list){
   const box = el("div"), stage = el("div","stage"); box.append(stage);
   if(!list.length){ box.replaceChildren(el("p","empty","No videos yet.")); return box; }
   const slides = list.map(it=>{
-    const a = link("", "#/v/"+it.id, "slide"), v = document.createElement("video");
-    v.muted=true; v.loop=true; v.playsInline=true; v.preload="metadata"; v.src=it.url;
+    const a = link("", "#/v/"+it.id, "slide"); let v;
+    if(it.link){ v=el("div","emb"); v.dataset.src=embedOf(it.path)?.preview||""; }
+    else { v=document.createElement("video"); v.muted=true; v.loop=true; v.playsInline=true; v.preload="metadata"; v.src=it.url; }
     const t = el("div","t",it.name); t.append(el("small",null,"by "+(it.uploader||"unknown")));
-    a.append(v,t); stage.append(a); return a;
+    a.append(v,el("span","cover"),t); stage.append(a); return a;
   });
   const prev=el("button",null,"‹"), next=el("button",null,"›"), dots=el("div","dots"), bar=el("div","bar"), fill=el("b");
   prev.setAttribute("aria-label","Previous video"); next.setAttribute("aria-label","Next video");
   list.forEach(()=>dots.append(el("i"))); bar.append(fill);
   const ctl = el("div","ctl"); ctl.append(prev,dots,next); box.append(ctl,bar);
   let i=0,t0=0,hover=false;
-  const go = n => { i=(n+list.length)%list.length; slides.forEach((s,j)=>{ s.classList.toggle("on",j===i); const v=s.firstChild; if(j===i){ v.currentTime=0; v.play().catch(()=>{}); } else v.pause(); }); [...dots.children].forEach((d,j)=>d.classList.toggle("on",j===i)); t0=performance.now(); };
+  const go = n => { i=(n+list.length)%list.length; slides.forEach((s,j)=>{ s.classList.toggle("on",j===i); const v=s.firstChild;
+    if(v.tagName==="DIV"){ v.replaceChildren(); if(j===i&&v.dataset.src){ const f=document.createElement("iframe"); f.src=v.dataset.src; f.allow="autoplay; encrypted-media"; f.title="Video preview"; v.append(f); } }
+    else if(j===i){ v.currentTime=0; v.play().catch(()=>{}); } else v.pause(); }); [...dots.children].forEach((d,j)=>d.classList.toggle("on",j===i)); t0=performance.now(); };
   prev.onclick=()=>go(i-1); next.onclick=()=>go(i+1);
   box.onmouseenter=()=>hover=true; box.onmouseleave=()=>{hover=false;t0=performance.now()};
   go(0);
@@ -210,8 +226,9 @@ function audioBlocks(){
 function article(id,kind){
   const it = find(id);
   if(!it || it.kind!==kind){ app.append(el("p","empty","This production was not found.")); return; }
-  const a = el("article","art"), m = document.createElement(kind==="video"?"video":"audio");
-  m.controls=true; m.autoplay=true; m.src=it.url;
+  const a = el("article","art"), emb = it.link ? embedOf(it.path) : null; let m;
+  if(emb){ m=document.createElement("iframe"); m.src=emb.full; m.allow="autoplay; encrypted-media; fullscreen; picture-in-picture"; m.allowFullscreen=true; m.title=it.name; }
+  else { m=document.createElement(kind==="video"?"video":"audio"); m.controls=true; m.autoplay=true; m.src=it.url; }
   a.append(link("← Back",kind==="video"?"#/video":"#/audio"), el("div","kick",(it.category||KIND[kind])), el("h1",null,it.name), el("div","muted","by "+(it.uploader||"unknown")+" · "+new Date(it.created_at).toLocaleDateString()), m);
   if(it.description) a.append(el("p",null,it.description));
   a.append(adminBar(it)); app.append(a);
@@ -223,7 +240,7 @@ function adminBar(it){
 }
 async function removeItem(it){
   if(!confirm(`Remove ${it.name}?`)) return;
-  await sb.storage.from("media").remove([it.path]);
+  if(!it.link) await sb.storage.from("media").remove([it.path]);
   const {error}=await sb.from("files").delete().eq("id",it.id);
   if(error) alert(error.message); else { location.hash="#/"; load(); }
 }
@@ -271,20 +288,29 @@ $("#u-close").onclick = () => $("#up").close();
 const um = t => $("#u-msg").textContent = t;
 $("#u-go").onclick = async () => {
   if(!me) return um("Please log in first.");
-  const f=$("#u-file").files[0], who=$("#u-name").value.trim();
-  if(!who||!f) return um("Add your name and a file.");
-  const kind=kindOf(f.name); if(!kind) return um("File type not supported.");
-  if(f.size>50*1024*1024) return um("That file is over 50 MB. Compress it first.");
-  const title=$("#u-title").value.trim()||f.name.replace(/\.[^.]+$/,"");
+  const f=$("#u-file").files[0], who=$("#u-name").value.trim(), lnk=$("#u-link").value.trim();
+  if(!who) return um("Add your name.");
+  if(!f && !lnk) return um("Choose a file or paste a video link.");
+  if(f && lnk) return um("Use either a file or a link, not both.");
+  let kind, path;
+  if(lnk){ if(!embedOf(lnk)) return um("Use a YouTube or Vimeo link."); kind="video"; path=lnk; }
+  else {
+    kind=kindOf(f.name); if(!kind) return um("File type not supported.");
+    if(f.size>MAX_MB*1024*1024) return um(`That file is over ${MAX_MB} MB. Upload big videos to YouTube or Vimeo and paste the link instead.`);
+    path=crypto.randomUUID()+"."+ext(f.name);
+  }
+  const title=$("#u-title").value.trim()||(f?f.name.replace(/\.[^.]+$/,""):"");
+  if(!title) return um("Add a title.");
   const cat=kind==="audio"?($("#u-cat").value.trim()||"More audio"):null, desc=kind==="text"?null:$("#u-desc").value.trim()||null;
-  $("#u-go").disabled=true; um("Uploading…");
-  const path=crypto.randomUUID()+"."+ext(f.name);
-  const r2=await sb.storage.from("media").upload(path,f,{contentType:f.type||undefined});
-  if(r2.error){ $("#u-go").disabled=false; return um("Upload failed: "+r2.error.message); }
+  $("#u-go").disabled=true; um("Publishing…");
+  if(f){
+    const r2=await sb.storage.from("media").upload(path,f,{contentType:f.type||undefined});
+    if(r2.error){ $("#u-go").disabled=false; return um("Upload failed: "+r2.error.message); }
+  }
   const r1=await sb.from("files").insert({name:title,kind,path,uploader:who,category:cat,description:desc});
   $("#u-go").disabled=false;
-  if(r1.error){ await sb.storage.from("media").remove([path]); return um("Could not save: "+r1.error.message); }
-  um("Published!"); ["#u-title","#u-cat","#u-desc","#u-file"].forEach(x=>$(x).value=""); load();
+  if(r1.error){ if(f) await sb.storage.from("media").remove([path]); return um("Could not save: "+r1.error.message); }
+  um("Published!"); ["#u-title","#u-cat","#u-desc","#u-file","#u-link"].forEach(x=>$(x).value=""); load();
 };
  
 /* ---------- login ---------- */
@@ -295,6 +321,7 @@ $("#a-go").onclick = async () => {
   me=data.user; $("#a-pass").value=""; $("#adm").close(); load();
 };
 </script>
+
 
 
 </body>
